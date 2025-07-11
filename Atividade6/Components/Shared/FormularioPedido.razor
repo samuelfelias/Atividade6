@@ -1,0 +1,173 @@
+@using Atividade6.Models
+@using Atividade6.Services
+@inject ClienteService ClienteService
+@inject NotificationService NotificationService
+
+<div class="card">
+    <div class="card-header">
+        <h4>@(Pedido?.Id > 0 ? "Editar Pedido" : "Novo Pedido")</h4>
+    </div>
+    <div class="card-body">
+        <EditForm Model="@PedidoAtual" OnValidSubmit="@SalvarPedido">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Cliente:</label>
+                        <select class="form-select" @onchange="OnClienteChanged">
+                            <option value="">Selecione um cliente...</option>
+                            @foreach (var cliente in clientes)
+                            {
+                                <option value="@cliente.Id" selected="@(PedidoAtual.Cliente?.Id == cliente.Id)">
+                                    @cliente.Nome - @cliente.Email
+                                </option>
+                            }
+                        </select>
+                        @if (PedidoAtual.Cliente?.Id == 0)
+                        {
+                            <div class="text-danger">Cliente é obrigatório</div>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Data do Pedido:</label>
+                        <InputDate class="form-control" @bind-Value="PedidoAtual.DataPedido" />
+                        <ValidationMessage For="@(() => PedidoAtual.DataPedido)" class="text-danger" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Status:</label>
+                        <select class="form-select" @bind="PedidoAtual.Status">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Processando">Processando</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                        <ValidationMessage For="@(() => PedidoAtual.Status)" class="text-danger" />
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <ListaItensPedido 
+                    Itens="@PedidoAtual.Itens" 
+                    ItensChanged="@OnItensChanged" />
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" disabled="@(!IsFormValid())">
+                    <i class="bi bi-check-circle"></i> @(Pedido?.Id > 0 ? "Atualizar" : "Salvar")
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Pedido? Pedido { get; set; }
+    [Parameter] public EventCallback<Pedido> OnSalvar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    private List<Cliente> clientes = new();
+    private Pedido PedidoAtual = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        clientes = await ClienteService.ObterTodosClientesAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Pedido != null)
+        {
+            PedidoAtual = new Pedido
+            {
+                Id = Pedido.Id,
+                Cliente = Pedido.Cliente,
+                DataPedido = Pedido.DataPedido,
+                Status = Pedido.Status,
+                Itens = Pedido.Itens.ToList()
+            };
+        }
+        else
+        {
+            PedidoAtual = new Pedido
+            {
+                DataPedido = DateTime.Now,
+                Status = "Pendente"
+            };
+        }
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Lógica pós-renderização se necessário
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task OnClienteChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int clienteId) && clienteId > 0)
+        {
+            var cliente = await ClienteService.ObterClientePorIdAsync(clienteId);
+            if (cliente != null)
+            {
+                PedidoAtual.Cliente = cliente;
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            PedidoAtual.Cliente = new Cliente();
+        }
+    }
+
+    private Task OnItensChanged(List<ItemPedido> itens)
+    {
+        PedidoAtual.Itens = itens;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private bool IsFormValid()
+    {
+        return PedidoAtual.Cliente?.Id > 0 && 
+               !string.IsNullOrEmpty(PedidoAtual.Status) && 
+               PedidoAtual.Itens.Any();
+    }
+
+    private async Task SalvarPedido()
+    {
+        if (IsFormValid())
+        {
+            try
+            {
+                await OnSalvar.InvokeAsync(PedidoAtual);
+                NotificationService.ShowSuccess(Pedido?.Id > 0 ? "Pedido atualizado com sucesso!" : "Pedido criado com sucesso!");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Erro ao salvar pedido: {ex.Message}");
+            }
+        }
+        else
+        {
+            NotificationService.ShowWarning("Por favor, preencha todos os campos obrigatórios e adicione pelo menos um item.");
+        }
+    }
+
+    private async Task Cancelar()
+    {
+        await OnCancelar.InvokeAsync();
+    }
+}

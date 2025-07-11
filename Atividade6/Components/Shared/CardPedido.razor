@@ -1,0 +1,42 @@
+@using Atividade6.Models
+
+<div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Pedido #@Pedido.Id</h6>
+        <span class="badge bg-@GetStatusColor(Pedido.Status)">@Pedido.Status</span>
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            <strong>Cliente:</strong> @Pedido.Cliente?.Nome<br>
+            <strong>Data:</strong> @Pedido.DataPedido.ToString("dd/MM/yyyy")<br>
+            <strong>Total:</strong> @Pedido.Total.ToString("C")<br>
+            <strong>Itens:</strong> @Pedido.Itens.Count
+        </p>
+    </div>
+    <div class="card-footer d-flex gap-2">
+        <button class="btn btn-primary btn-sm flex-fill" @onclick="() => OnVisualizar.InvokeAsync(Pedido)">
+            <i class="bi bi-eye"></i> Visualizar/Editar
+        </button>
+        <button class="btn btn-danger btn-sm" @onclick="() => OnRemover.InvokeAsync(Pedido)">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Pedido Pedido { get; set; } = new();
+    [Parameter] public EventCallback<Pedido> OnVisualizar { get; set; }
+    [Parameter] public EventCallback<Pedido> OnRemover { get; set; }
+
+    private string GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Pendente" => "warning",
+            "Processando" => "info",
+            "Concluído" => "success",
+            "Cancelado" => "danger",
+            _ => "secondary"
+        };
+    }
+}

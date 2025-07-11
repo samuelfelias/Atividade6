@@ -1,0 +1,129 @@
+@using Atividade6.Models
+@using Atividade6.Services
+@inject ProdutoService ProdutoService
+
+@if (IsVisible)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-backdrop fade show"></div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <EditForm Model="@ItemAtual" OnValidSubmit="@AdicionarItem">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">
+                        <h5 class="modal-title">@(ItemAtual.Id > 0 ? "Editar Item" : "Adicionar Item")</h5>
+                        <button type="button" class="btn-close" @onclick="Cancelar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ValidationSummary class="text-danger" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Produto:</label>
+                            <select class="form-select" @onchange="OnProdutoChanged">
+                                <option value="">Selecione um produto...</option>
+                                @foreach (var produto in produtos)
+                                {
+                                    <option value="@produto.Id" selected="@(ItemAtual.Produto?.Id == produto.Id)">
+                                        @produto.Nome - @produto.Preco.ToString("C")
+                                    </option>
+                                }
+                            </select>
+                            @if (ItemAtual.Produto?.Id == 0)
+                            {
+                                <div class="text-danger">Produto é obrigatório</div>
+                            }
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Quantidade:</label>
+                            <InputNumber class="form-control" @bind-Value="ItemAtual.Quantidade" />
+                            <ValidationMessage For="@(() => ItemAtual.Quantidade)" class="text-danger" />
+                        </div>
+                        
+                        @if (ItemAtual.Produto?.Id > 0 && ItemAtual.Quantidade > 0)
+                        {
+                            <div class="alert alert-info">
+                                <strong>Subtotal:</strong> @ItemAtual.Subtotal.ToString("C")
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" disabled="@(!IsFormValid())">
+                            @(ItemAtual.Id > 0 ? "Atualizar" : "Adicionar")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public ItemPedido? Item { get; set; }
+    [Parameter] public EventCallback<ItemPedido> OnAdicionar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    private List<Produto> produtos = new();
+    private ItemPedido ItemAtual = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        produtos = await ProdutoService.ObterTodosProdutosAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Item != null)
+        {
+            ItemAtual = new ItemPedido
+            {
+                Id = Item.Id,
+                Produto = Item.Produto,
+                Quantidade = Item.Quantidade
+            };
+        }
+        else
+        {
+            ItemAtual = new ItemPedido();
+        }
+    }
+
+    private async Task OnProdutoChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int produtoId) && produtoId > 0)
+        {
+            var produto = await ProdutoService.ObterProdutoPorIdAsync(produtoId);
+            if (produto != null)
+            {
+                ItemAtual.Produto = produto;
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            ItemAtual.Produto = new Produto();
+        }
+    }
+
+    private bool IsFormValid()
+    {
+        return ItemAtual.Produto?.Id > 0 && ItemAtual.Quantidade > 0;
+    }
+
+    private async Task AdicionarItem()
+    {
+        if (IsFormValid())
+        {
+            await OnAdicionar.InvokeAsync(ItemAtual);
+        }
+    }
+
+    private Task Cancelar()
+    {
+        ItemAtual = new ItemPedido();
+        OnCancelar.InvokeAsync();
+        return Task.CompletedTask;
+    }
+}

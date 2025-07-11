@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atividade6", "Atividade6\Atividade6.csproj", "{30F6F642-F96C-4BAC-8B72-3EE9B0CFBDAB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atividade6.Client", "Atividade6.Client\Atividade6.Client.csproj", "{8EC42459-2083-4751-9F25-5B4D1436367E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{30F6F642-F96C-4BAC-8B72-3EE9B0CFBDAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30F6F642-F96C-4BAC-8B72-3EE9B0CFBDAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30F6F642-F96C-4BAC-8B72-3EE9B0CFBDAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30F6F642-F96C-4BAC-8B72-3EE9B0CFBDAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EC42459-2083-4751-9F25-5B4D1436367E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EC42459-2083-4751-9F25-5B4D1436367E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EC42459-2083-4751-9F25-5B4D1436367E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EC42459-2083-4751-9F25-5B4D1436367E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {954E79CF-B70C-4202-847A-DFCFCE4E0F6A}
+	EndGlobalSection
+EndGlobal

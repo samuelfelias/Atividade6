@@ -1,0 +1,4 @@
+C:\Users\Samuel\Documents\POO\Atividade6\Atividade6.Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\Samuel\Documents\POO\Atividade6\Atividade6.Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\Samuel\Documents\POO\Atividade6\Atividade6.Client\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\Samuel\Documents\POO\Atividade6\Atividade6.Client\obj\Debug\net8.0\staticwebassets.build.json

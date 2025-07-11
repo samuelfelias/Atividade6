@@ -1,0 +1,116 @@
+@page "/pedidos"
+@using Atividade6.Models
+@using Atividade6.Services
+@inject PedidoService PedidoService
+@inject ClienteService ClienteService
+@inject ProdutoService ProdutoService
+
+<PageTitle>Gerenciar Pedidos</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gerenciar Pedidos</h2>
+                <button class="btn btn-primary" @onclick="NovoPedido">
+                    <i class="bi bi-plus-circle"></i> Novo Pedido
+                </button>
+            </div>
+
+            @if (pedidos.Any())
+            {
+                <div class="row">
+                    @foreach (var pedido in pedidos)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <CardPedido Pedido="@pedido" 
+                                       OnVisualizar="@VisualizarPedido" 
+                                       OnRemover="@RemoverPedido" />
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum pedido encontrado.
+                </div>
+            }
+
+            @if (mostrarFormulario)
+            {
+                <FormularioPedido Pedido="@pedidoAtual" 
+                                 OnSalvar="@SalvarPedido" 
+                                 OnCancelar="@CancelarFormulario" />
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Pedido> pedidos = new();
+    private bool mostrarFormulario = false;
+    private Pedido? pedidoAtual = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarPedidos();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Lógica pós-renderização se necessário
+            // Ex: inicialização de bibliotecas JS
+        }
+    }
+
+    private async Task CarregarPedidos()
+    {
+        pedidos = await PedidoService.ObterTodosPedidosAsync();
+        StateHasChanged();
+    }
+
+    private void NovoPedido()
+    {
+        pedidoAtual = new Pedido();
+        mostrarFormulario = true;
+        StateHasChanged();
+    }
+
+    private void VisualizarPedido(Pedido pedido)
+    {
+        pedidoAtual = pedido;
+        mostrarFormulario = true;
+        StateHasChanged();
+    }
+
+    private async Task SalvarPedido(Pedido pedido)
+    {
+        if (pedido.Id == 0)
+        {
+            await PedidoService.AdicionarPedidoAsync(pedido);
+        }
+        else
+        {
+            await PedidoService.AtualizarPedidoAsync(pedido);
+        }
+        
+        await CarregarPedidos();
+        CancelarFormulario();
+    }
+
+    private async Task RemoverPedido(Pedido pedido)
+    {
+        await PedidoService.RemoverPedidoAsync(pedido.Id);
+        await CarregarPedidos();
+    }
+
+    private void CancelarFormulario()
+    {
+        mostrarFormulario = false;
+        pedidoAtual = null;
+        StateHasChanged();
+    }
+}

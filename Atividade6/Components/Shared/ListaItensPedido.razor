@@ -1,0 +1,180 @@
+@using Atividade6.Models
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Itens do Pedido</h5>
+        <button class="btn btn-success btn-sm" @onclick="AbrirFormularioItem">
+            <i class="bi bi-plus"></i> Adicionar Item
+        </button>
+    </div>
+    <div class="card-body">
+        @if (Itens.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Categoria</th>
+                            <th>Preço Unit.</th>
+                            <th>Quantidade</th>
+                            <th>Subtotal</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Itens)
+                        {
+                            <tr>
+                                <td>@item.Produto.Nome</td>
+                                <td>@item.Produto.Categoria</td>
+                                <td>@item.Produto.Preco.ToString("C")</td>
+                                <td>@item.Quantidade</td>
+                                <td>@item.Subtotal.ToString("C")</td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm me-1" @onclick="() => EditarItem(item)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" @onclick="() => RemoverItem(item)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6 offset-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Total do Pedido</h5>
+                            <h4 class="text-primary">@Total.ToString("C")</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle"></i>
+                Nenhum item adicionado ao pedido.
+            </div>
+        }
+    </div>
+</div>
+
+<FormularioItemPedido 
+    IsVisible="@mostrarFormularioItem" 
+    Item="@itemEditando"
+    OnAdicionar="@AdicionarOuAtualizarItem" 
+    OnCancelar="@FecharFormularioItem" />
+
+<ConfirmacaoModal 
+    IsVisible="@mostrarConfirmacao"
+    Titulo="Remover Item"
+    Mensagem="Tem certeza que deseja remover este item do pedido?"
+    OnConfirmar="@ConfirmarRemocao"
+    OnCancelar="@CancelarRemocao" />
+
+@code {
+    [Parameter] public List<ItemPedido> Itens { get; set; } = new();
+    [Parameter] public EventCallback<List<ItemPedido>> ItensChanged { get; set; }
+
+    private bool mostrarFormularioItem = false;
+    private bool mostrarConfirmacao = false;
+    private ItemPedido? itemEditando;
+    private ItemPedido? itemParaRemover;
+    private bool _shouldRender = true;
+
+    public decimal Total => Itens.Sum(item => item.Subtotal);
+
+    protected override bool ShouldRender()
+    {
+        return _shouldRender;
+    }
+
+    protected override void OnParametersSet()
+    {
+        _shouldRender = true;
+    }
+
+    private void AbrirFormularioItem()
+    {
+        itemEditando = null;
+        mostrarFormularioItem = true;
+        _shouldRender = true;
+    }
+
+    private void EditarItem(ItemPedido item)
+    {
+        itemEditando = item;
+        mostrarFormularioItem = true;
+        _shouldRender = true;
+    }
+
+    private async Task AdicionarOuAtualizarItem(ItemPedido item)
+    {
+        if (itemEditando != null)
+        {
+            // Atualizar item existente
+            var index = Itens.FindIndex(i => i.Id == itemEditando.Id);
+            if (index >= 0)
+            {
+                Itens[index] = new ItemPedido
+                {
+                    Id = item.Id,
+                    Produto = item.Produto,
+                    Quantidade = item.Quantidade
+                };
+            }
+        }
+        else
+        {
+            // Adicionar novo item
+            var novoItem = new ItemPedido
+            {
+                Id = Itens.Count > 0 ? Itens.Max(i => i.Id) + 1 : 1,
+                Produto = item.Produto,
+                Quantidade = item.Quantidade
+            };
+            Itens.Add(novoItem);
+        }
+
+        await ItensChanged.InvokeAsync(Itens);
+        FecharFormularioItem();
+        _shouldRender = true;
+    }
+
+    private void FecharFormularioItem()
+    {
+        mostrarFormularioItem = false;
+        itemEditando = null;
+        _shouldRender = true;
+    }
+
+    private void RemoverItem(ItemPedido item)
+    {
+        itemParaRemover = item;
+        mostrarConfirmacao = true;
+        _shouldRender = true;
+    }
+
+    private async Task ConfirmarRemocao()
+    {
+        if (itemParaRemover != null)
+        {
+            Itens.Remove(itemParaRemover);
+            await ItensChanged.InvokeAsync(Itens);
+        }
+        CancelarRemocao();
+    }
+
+    private void CancelarRemocao()
+    {
+        mostrarConfirmacao = false;
+        itemParaRemover = null;
+        _shouldRender = true;
+    }
+}
